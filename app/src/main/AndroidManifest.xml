@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:allowBackup="false"
@@ -23,6 +25,10 @@
 
         <receiver
             android:name=".Alarms$Receiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".Updater$Receiver"
             android:exported="false" />
     </application>
 </manifest>

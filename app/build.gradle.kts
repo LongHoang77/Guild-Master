@@ -5,6 +5,8 @@ plugins {
 
 // Khoá ký lấy từ biến môi trường (GitHub Secrets), không commit vào repo
 val keystorePath: String? = System.getenv("KEYSTORE_PATH")
+// CI truyền số lần chạy làm versionCode → tag release v<versionCode>
+val buildNumber = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
 
 android {
     namespace = "vn.guildmaster.game"
@@ -14,8 +16,8 @@ android {
         applicationId = "vn.guildmaster.game"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = buildNumber
+        versionName = "0.1.$buildNumber"
     }
 
     signingConfigs {

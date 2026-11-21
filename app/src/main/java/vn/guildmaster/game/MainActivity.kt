@@ -2,11 +2,14 @@ package vn.guildmaster.game
 
 import android.Manifest
 import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -19,6 +22,7 @@ import vn.guildmaster.core.Expedition
 import vn.guildmaster.core.Game
 import vn.guildmaster.core.GameError
 import java.io.IOException
+import kotlin.concurrent.thread
 import kotlin.random.Random
 
 abstract class Screen(val a: MainActivity) {
@@ -96,6 +100,7 @@ class MainActivity : Activity() {
         // Báo thức mất sau khi khởi động lại máy → đặt lại khi mở app
         for (e in game.s.expeditions) if (e.outcome == null) Alarms.schedule(this, e.quest.id, e.endAt, returnTitle(e))
         render(true)
+        checkUpdate(false)
     }
 
     override fun onResume() {
@@ -209,6 +214,57 @@ class MainActivity : Activity() {
     }
 
     fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+
+    // ---------- Tự cập nhật ----------
+
+    var update: Updater.Release? = null
+    var updateMsg = ""
+    var updating = false
+
+    /** manual = người dùng bấm kiểm tra → báo cả khi không có bản mới. */
+    fun checkUpdate(manual: Boolean) {
+        if (manual) toast("Đang kiểm tra…")
+        thread {
+            try {
+                val r = Updater.fetchLatest()
+                runOnUiThread {
+                    update = r?.takeIf { it.code > Updater.currentCode(this) }
+                    if (manual && update == null) toast("Đang dùng bản mới nhất")
+                    render()
+                }
+            } catch (e: Exception) {
+                if (manual) runOnUiThread { toast("Không kiểm tra được: ${e.message}") }
+            }
+        }
+    }
+
+    fun startUpdate() {
+        val r = update ?: return
+        if (updating) return
+        if (!packageManager.canRequestPackageInstalls()) {
+            toast("Hãy cho phép cài ứng dụng từ nguồn này rồi bấm Cập nhật lần nữa")
+            startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
+            return
+        }
+        persist()
+        updating = true
+        updateMsg = "Đang tải…"
+        render()
+        thread {
+            try {
+                Updater.install(this, r) { p ->
+                    runOnUiThread { updateMsg = if (p >= 0) "Đang tải $p%" else "Đang tải…" }
+                }
+                runOnUiThread { updateMsg = "Đang cài đặt — xác nhận trên hộp thoại hệ thống" }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    updating = false
+                    updateMsg = "Lỗi tải bản cập nhật: ${e.message}"
+                    render()
+                }
+            }
+        }
+    }
 
     fun returnTitle(e: Expedition): String {
         val leader = e.heroIds.firstNotNullOfOrNull { game.s.hero(it) }?.name ?: "?"

@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -31,12 +34,25 @@ jobs:
 
       - name: Build release
         env:
+          VERSION_CODE: ${{ github.run_number }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: gradle :app:assembleRelease --no-daemon
+        run: |
+          gradle :app:assembleRelease --no-daemon
+          cp app/build/outputs/apk/release/*.apk guildmaster.apk
 
       - uses: actions/upload-artifact@v4
         with:
           name: guildmaster-apk
-          path: app/build/outputs/apk/release/*.apk
+          path: guildmaster.apk
+
+      # Chỉ phát hành bản đã ký: app trong máy dò release mới nhất để tự cập nhật
+      - name: Tạo GitHub Release
+        if: env.KEYSTORE_PATH != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: Bản 0.1.${{ github.run_number }}
+          body: ${{ github.event.head_commit.message }}
+          files: guildmaster.apk

@@ -6,7 +6,7 @@ Game idle quản lý hội mạo hiểm trên Android, chơi offline, 1 người
 
 Giai đoạn 1: tuyển mạo hiểm giả, xếp đội, gửi đi nhiệm vụ có thời gian, mô phỏng trận theo lượt khi đội về, lên cấp, trang bị 6 ô, thông báo khi đội về.
 
-Ngoài phạm vi (giai đoạn sau): lò rèn (nâng cấp/phân rã), kết hợp nghề, chuỗi nhiệm vụ/boss, công trình hội quán, tự cập nhật qua GitHub (cần quyền INTERNET).
+Ngoài phạm vi (giai đoạn sau): lò rèn (nâng cấp/phân rã), kết hợp nghề, chuỗi nhiệm vụ/boss, công trình hội quán.
 
 ## Hạ tầng
 
@@ -14,7 +14,8 @@ Ngoài phạm vi (giai đoạn sau): lò rèn (nâng cấp/phân rã), kết h�
   - `core/` — Kotlin/JVM thuần, không phụ thuộc Android: model, engine trận, luật sinh nhiệm vụ/ứng viên/đồ, tiến trình thời gian.
   - `app/` — Android (applicationId `vn.guildmaster.game`, minSdk 26, targetSdk 34): UI dựng bằng code, lưu file, thông báo.
 - Không thư viện ngoài. `core` không đụng JSON; (de)serialize nằm ở `app` bằng `org.json` có sẵn của Android.
-- Không xin quyền INTERNET. Quyền duy nhất: `POST_NOTIFICATIONS` (báo đội về dùng `setAndAllowWhileIdle`, không cần quyền báo thức chính xác).
+- Quyền: `POST_NOTIFICATIONS` (báo đội về dùng `setAndAllowWhileIdle`, không cần quyền báo thức chính xác); `INTERNET` + `REQUEST_INSTALL_PACKAGES` chỉ dùng cho tự cập nhật.
+- Tự cập nhật: CI dùng `run_number` làm `versionCode`, tạo GitHub Release tag `v<versionCode>` kèm APK đã ký (chỉ khi có keystore). App mở lên gọi `releases/latest`, có bản mới hơn thì hiện nút ở tab Hội → tải APK vào `PackageInstaller` → hệ thống hỏi xác nhận.
 - Bản build đặt `isDebuggable = false`. GitHub Actions build APK, ký bằng khoá riêng (không commit khoá vào repo công khai; dùng GitHub Secrets).
 - Không viết test trừ khi được yêu cầu; `core` tách riêng để có thể test sau.
 

@@ -12,6 +12,7 @@ import vn.guildmaster.core.GameError
 class GuildScreen(a: MainActivity) : Screen(a) {
 
     override fun build(root: LinearLayout) {
+        updateCard(root)
         val c = ui.card()
         c.addView(ui.text("Hội cấp ${s.guildLevel}", 20f, bold = true))
         c.addView(ui.text("Điểm hội ${s.guildExp}/${g.guildNeed} — thắng 1 nhiệm vụ được 1 điểm", 12f, ui.sub))
@@ -29,6 +30,29 @@ class GuildScreen(a: MainActivity) : Screen(a) {
             root.addView(e)
         }
         for (e in s.expeditions.sortedBy { it.endAt }) root.addView(expeditionCard(e))
+
+        val foot = ui.row().apply { setPadding(ui.dp(4), ui.dp(20), 0, 0) }
+        foot.addView(ui.lpWeight(ui.text("Phiên bản ${Updater.currentName(a)}", 12f, ui.sub)))
+        foot.addView(ui.button("Kiểm tra cập nhật", Ui.Btn.SECONDARY) { a.checkUpdate(true) })
+        root.addView(foot)
+    }
+
+    private fun updateCard(root: LinearLayout) {
+        val u = a.update
+        if (u == null && a.updateMsg.isEmpty()) return
+        val c = ui.card(highlight = true)
+        if (u != null) {
+            c.addView(ui.text("Có bản cập nhật mới (${u.tag})", 15f, ui.accent, true))
+            if (u.notes.isNotBlank()) c.addView(ui.text(u.notes.trim().take(300), 12f, ui.sub))
+        }
+        val status = ui.text("", 13f)
+        c.addView(status)
+        live {
+            status.text = a.updateMsg
+            status.visibility = if (a.updateMsg.isEmpty()) android.view.View.GONE else android.view.View.VISIBLE
+        }
+        if (u != null) c.addView(ui.gap(ui.button("Cập nhật ngay", enabled = !a.updating) { a.startUpdate() }, 8))
+        root.addView(c)
     }
 
     private fun expeditionCard(e: Expedition): LinearLayout {
