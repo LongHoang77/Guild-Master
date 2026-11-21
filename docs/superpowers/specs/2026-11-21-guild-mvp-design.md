@@ -15,8 +15,8 @@ Ngoài phạm vi (giai đoạn sau): lò rèn (nâng cấp/phân rã), kết h�
   - `app/` — Android (applicationId `vn.guildmaster.game`, minSdk 26, targetSdk 34): UI dựng bằng code, lưu file, thông báo.
 - Không thư viện ngoài. `core` không đụng JSON; (de)serialize nằm ở `app` bằng `org.json` có sẵn của Android.
 - Quyền: `POST_NOTIFICATIONS` (báo đội về dùng `setAndAllowWhileIdle`, không cần quyền báo thức chính xác); `INTERNET` + `REQUEST_INSTALL_PACKAGES` chỉ dùng cho tự cập nhật.
-- Tự cập nhật: CI dùng `run_number` làm `versionCode`, tạo GitHub Release tag `v<versionCode>` kèm APK đã ký (chỉ khi có keystore). App mở lên gọi `releases/latest`, có bản mới hơn thì hiện nút ở tab Hội → tải APK vào `PackageInstaller` → hệ thống hỏi xác nhận.
-- Bản build đặt `isDebuggable = false`. GitHub Actions build APK, ký bằng khoá riêng (không commit khoá vào repo công khai; dùng GitHub Secrets).
+- Tự cập nhật: CI dùng `run_number` làm `versionCode`, tạo GitHub Release tag `v<versionCode>` kèm APK đã ký. App mở lên gọi `releases/latest`, có bản mới hơn thì hiện nút ở tab Hội → tải APK vào `PackageInstaller` → hệ thống hỏi xác nhận.
+- Bản build đặt `isDebuggable = false`. GitHub Actions build APK, ký bằng khoá cố định `app/signing.p12` commit trong repo (đơn giản, không cần Secrets; chấp nhận rủi ro người khác ký được bản giả).
 - Không viết test trừ khi được yêu cầu; `core` tách riêng để có thể test sau.
 
 ## 1. Nhân vật (Hero)

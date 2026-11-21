@@ -3,8 +3,6 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
-// Khoá ký lấy từ biến môi trường (GitHub Secrets), không commit vào repo
-val keystorePath: String? = System.getenv("KEYSTORE_PATH")
 // CI truyền số lần chạy làm versionCode → tag release v<versionCode>
 val buildNumber = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
 
@@ -20,14 +18,14 @@ android {
         versionName = "0.1.$buildNumber"
     }
 
+    // Khoá cố định commit trong repo → mọi bản build cùng chữ ký, cài đè được
     signingConfigs {
-        if (keystorePath != null) {
-            create("release") {
-                storeFile = file(keystorePath)
-                storePassword = System.getenv("KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("KEY_ALIAS")
-                keyPassword = System.getenv("KEY_PASSWORD")
-            }
+        create("release") {
+            storeFile = file("signing.p12")
+            storeType = "PKCS12"
+            storePassword = "guildmaster"
+            keyAlias = "guildmaster"
+            keyPassword = "guildmaster"
         }
     }
 
@@ -35,7 +33,7 @@ android {
         getByName("release") {
             isMinifyEnabled = false
             isDebuggable = false
-            if (keystorePath != null) signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
